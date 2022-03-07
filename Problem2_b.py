@@ -1,28 +1,13 @@
 #!/usr/bin/env python
 # coding: utf-8
 import cv2
-import os
-import glob
-from cv2 import sort
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.ndimage import rotate
-from scipy.spatial import distance as dist
 
 orientation_count = 0
 prev_orientation = 0
 prev_id = 0
-
-def order_points(pts):
-    xSorted = pts[np.argsort(pts[:, 0]), :]
-    leftMost = xSorted[:2, :]
-    rightMost = xSorted[2:, :]
-    leftMost = leftMost[np.argsort(leftMost[:, 1]), :]
-    (tl, bl) = leftMost
-    D = dist.cdist(tl[np.newaxis], rightMost, "euclidean")[0]
-    (br, tr) = rightMost[np.argsort(D)[::-1], :]
-    sorted = [tl,tr,br,bl]
-    return sorted
 
 def generate_mask(frame):
     cur_frame = np.zeros(frame.shape)
@@ -127,14 +112,12 @@ def main():
             cv2.namedWindow("video_frame", cv2.WINDOW_NORMAL)
             cv2.resizeWindow("video_frame", 700, 700)
             c_points, m = generate_mask(blur)
-            c_pts = np.array(c_points)
-            sorted_c_points = order_points(c_pts)
-            P_matrix, H_cube = projection_matrix(sorted_c_points, cube_bot_pt, K)
+            P_matrix, H_cube = projection_matrix(c_points, cube_bot_pt, K)
             cube_top_pts = draw_cube(P_matrix, H_cube)
             for i in range(4):
-                cv2.line(frame, (sorted_c_points[i][0], sorted_c_points[i][1]), (cube_top_pts[i][0], cube_top_pts[i][1]), (0, 0, 255), thickness=3, lineType=8)
+                cv2.line(frame, (c_points[i][0], c_points[i][1]), (cube_top_pts[i][0], cube_top_pts[i][1]), (0, 0, 255), thickness=3, lineType=8)
 
-            points = np.array(sorted_c_points, np.int32)
+            points = np.array(c_points, np.int32)
             points = points.reshape((-1,4,2))
             t_points = np.array(cube_top_pts, np.int32)
             t_points = t_points.reshape((-1,4,2))
@@ -146,7 +129,7 @@ def main():
                 break
         else:
             break
-    
+    print('The video of virtual cube on AR tag is saved in the folder')
     video1.release()
     cap.release()
 

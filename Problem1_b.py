@@ -13,16 +13,7 @@ orientation_count = 0
 prev_orientation = 0
 prev_id = 0
 
-def order_points(pts):
-    xSorted = pts[np.argsort(pts[:, 0]), :]
-    leftMost = xSorted[:2, :]
-    rightMost = xSorted[2:, :]
-    leftMost = leftMost[np.argsort(leftMost[:, 1]), :]
-    (tl, bl) = leftMost
-    D = dist.cdist(tl[np.newaxis], rightMost, "euclidean")[0]
-    (br, tr) = rightMost[np.argsort(D)[::-1], :]
-    sorted = [tl,tr,br,bl]
-    return sorted
+
 def generate_mask(frame):
     cur_frame = np.zeros(frame.shape)
     points = []
@@ -103,7 +94,6 @@ def decode_tag(ar_tag):
     corner2 = np.median(ar_tag[32:48, 80:96])
     corner3 = np.median(ar_tag[80:96, 80:96])
     corner4 = np.median(ar_tag[80:96, 32:48])
-    print(corner1, corner2, corner3, corner4)
     corner = [corner1, corner2, corner3, corner4]
     if(corner.count(255) >1 and orientation_count!=0):
         orientation = prev_orientation
@@ -134,6 +124,13 @@ def decode_tag(ar_tag):
 
 def main():
     video_file = '1tagvideo.mp4'
+    ref_tag_image = 'refTag.png'
+    ref_tag = cv2.imread(ref_tag_image)
+    resized_tag = cv2.resize(ref_tag, (128,128), interpolation = cv2.INTER_AREA)
+    rot, id = decode_tag(resized_tag)
+    print('The orientation of the reference tag is ', rot)
+    print('The ID of the reference tag is ', id)
+    print('Now decoding tag in the video frames')
     count = 1
     pts = [[128,0],[128,128],[0,128],[0,0]] # points in (y,x) form of the destination image
     fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
@@ -148,11 +145,8 @@ def main():
             img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             blur = cv2.blur(img,(21,21))
             c_points, m = generate_mask(blur)
-            c_pts = np.array(c_points)
-            sorted_c_points = order_points(c_pts)
-            h_matrix = Homography(sorted_c_points, pts)
+            h_matrix = Homography(c_points, pts)
             tag_from_img = Warp(frame, h_matrix, (128,128))
-            print(tag_from_img.shape)
             cv2.namedWindow("video_frame", cv2.WINDOW_NORMAL)
             cv2.resizeWindow("video_frame", 700, 700)
             angle, ID = decode_tag(tag_from_img)
@@ -174,6 +168,7 @@ def main():
                 break
         else:
             break
+    print('The video of detected and decoded AR tag is saved in the folder')
     video1.release()
     video2.release()
     cap.release()

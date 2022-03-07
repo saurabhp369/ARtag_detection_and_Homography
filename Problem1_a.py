@@ -74,6 +74,7 @@ def find_edges(thresh, save_path):
     plt.imshow(img_back_edge, cmap='gray')
     plt.axis('off')
     plt.savefig(save_path + '/ARTag_edges.png') 
+    plt.show()
     return img_back_edge
 
 

@@ -1,28 +1,14 @@
 #!/usr/bin/env python
 # coding: utf-8
 import cv2
-import os
-import glob
-from cv2 import sort
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.ndimage import rotate    
-from scipy.spatial import distance as dist  
+  
 
 orientation_count = 0
 prev_orientation = 0
 prev_id = 0
-
-def order_points(pts):
-    xSorted = pts[np.argsort(pts[:, 0]), :]
-    leftMost = xSorted[:2, :]
-    rightMost = xSorted[2:, :]
-    leftMost = leftMost[np.argsort(leftMost[:, 1]), :]
-    (tl, bl) = leftMost
-    D = dist.cdist(tl[np.newaxis], rightMost, "euclidean")[0]
-    (br, tr) = rightMost[np.argsort(D)[::-1], :]
-    sorted = [tl,tr,br,bl]
-    return sorted
 
 def generate_mask(frame):
     cur_frame = np.zeros(frame.shape)
@@ -136,6 +122,7 @@ def warpTestudo(frame, template, H):
     source_pts = H_inv.dot(destination_pts)
     source_pts /= source_pts[2,:]
     source_x, source_y = np.round(source_pts[:2,:]).astype(int)
+
     dest[source_y, source_x, :] = template[indY.ravel(), indX.ravel(), :] 
 
     return dest
@@ -157,9 +144,7 @@ def main():
             img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             blur = cv2.blur(img,(21,21))
             c_points, m = generate_mask(blur)
-            c_pts = np.array(c_points)
-            sorted_c_points = order_points(c_pts)
-            h_matrix = Homography(sorted_c_points, pts)
+            h_matrix = Homography(c_points, pts)
             tag_from_img = Warp(frame, h_matrix, (128,128))
             cv2.namedWindow("video_frame", cv2.WINDOW_NORMAL)
             cv2.resizeWindow("video_frame", 700, 700)
@@ -178,7 +163,7 @@ def main():
                 break
         else:
             break
-    
+    print('The video of superimposed Testudo is saved in the folder')
     video1.release()
     cap.release()
 
