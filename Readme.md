@@ -45,6 +45,6 @@ Placing a virtual cube on the AR tag
     1.To place a virtual cube on the AR tag we first need to calculate the projection matrix from the camera intrinsic matix and the homography matrix.
     2.Now that we have the projection matrix we can convert any point in homogenous world coordinate to a coordinate in camera image plane. We have the bottom 4 corners of the cube. The top four corners of the cube in the homogenous world frame are [[1,0,-1, 1], [1,1,-1,1],[0,1,-1,1], [0,0,-1,1]]. Using the         projection matrix we convert these coordinates to the camera image plane and then draw a cube based on the 8 points that we have.
     To run the code
-    $ python3 Problem2_a.py
+    $ python3 Problem2_b.py
 <img src="https://github.com/saurabhp369/ARtag_detection_and_Homography/blob/main/Images/cube.gif" width = "500" height = "250">
 
